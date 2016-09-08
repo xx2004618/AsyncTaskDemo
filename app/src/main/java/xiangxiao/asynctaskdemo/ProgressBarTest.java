@@ -19,11 +19,23 @@ public class ProgressBarTest extends AppCompatActivity {
         task.execute();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (task != null && task.getStatus() == AsyncTask.Status.RUNNING) {
+            // cancel 方法只是将对应的AsyncTask 标记为cancel状态,并不能真正的取消一个线程.
+            task.cancel(true);
+        }
+    }
+
     class MyAsyncTask extends AsyncTask<Void, Integer, Void> {
 
         @Override
         protected Void doInBackground(Void... params) {
             for (int i = 0; i < 100; i++) {
+                if(isCancelled()) {
+                    return null;
+                }
                 publishProgress(i);
                 try {
                     Thread.sleep(100);
@@ -37,6 +49,9 @@ public class ProgressBarTest extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
+            if (isCancelled()) {
+                return;
+            }
             progressBar.setProgress(values[0]);
         }
 
